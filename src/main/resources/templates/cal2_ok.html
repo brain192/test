@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<script>
+    function cals(value){
+        document.getElementById("see").value += value;
+    }
+
+    function cals2(){
+        document.getElementById("see").value = "";
+    }
+</script>
+<form action="/cal2_ok" method="get">
+계산기2
+    <br>
+    <input type="text" th:value="${result}" id="see" name="see">
+    <br>
+    <input type="button" value="1" id="num1" name="num1" onclick = "cals('1')">
+    <input type="button" value="2" id="num2" name="num2" onclick = "cals('2')">
+    <input type="button" value="3" id="num3" name="num3" onclick = "cals('3')">
+    <input type="button" value="+" id="plus" name="plus" onclick = "cals('+')">
+    <br>
+    <input type="button" value="4" id="num4" name="num4" onclick = "cals('4')">
+    <input type="button" value="5" id="num5" name="num5" onclick = "cals('5')">
+    <input type="button" value="6" id="num6" name="num6" onclick = "cals('6')">
+    <input type="button" value="-" id="minus" name="minus" onclick = "cals('-')">
+    <br>
+    <input type="button" value="7" id="num7" name="num7" onclick = "cals('7')">
+    <input type="button" value="8" id="num8" name="num8" onclick = "cals('8')">
+    <input type="button" value="9" id="num9" name="num9" onclick = "cals('9')">
+    <input type="button" value="*" id="gop" name="gop" onclick = "cals('*')">
+    <br>
+    <input type="button" value="0" id="num0" name="num0" onclick = "cals('0')">
+    <input type="button" value="C" id="numc" name="numc" onclick = "cals2()">
+    <button type="submit">=</button>
+    <input type="button" value="/" id="nanuki" name="nanuki" onclick = "cals('/')">
+</form>
+</body>
+</html>

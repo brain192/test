@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<form action="/cal1_ok" method="get">
+계산기1
+    <p>[[${cal3}]]</p>
+    <input type="text" value="[[${cal3}]]" name="cal1">
+    <select name="see">
+        <option value=""></option>
+        <option value="a">+</option>
+        <option value="b">-</option>
+        <option value="c">*</option>
+        <option value="d">/</option>
+    </select>
+    <input type="text" value="" name="cal2">
+    <button type="submit">=</button>
+</form>
+</body>
+</html>
