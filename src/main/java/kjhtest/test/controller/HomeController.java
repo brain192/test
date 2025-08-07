@@ -15,7 +15,7 @@ import java.util.regex.Pattern;
 
 @Controller
 public class HomeController {
-    @GetMapping("/")
+    @GetMapping("/test")
     public String home() {
         return "home";
     }
