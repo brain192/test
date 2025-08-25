@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>게시글 상세</title>
+</head>
+<body>
+<h2 th:text="${board.title}">제목</h2>
+<p th:text="'작성자: ' + ${board.writer}"></p>
+<p th:text="${board.content}"></p>
+
+<!-- 파일이 있을 경우 다운로드 링크 표시 -->
+<p th:if="${board.originalFilename != null}">
+  첨부파일:
+  <a th:href="@{|/board/download/${board.id}|}" th:text="${board.originalFilename}"></a>
+</p>
+
+<form th:action="@{|/board/${board.id}/update|}" method="post">
+  <input type="text" name="title" th:value="${board.title}"><br>
+  <textarea name="content" th:text="${board.content}"></textarea><br>
+  <button type="submit">수정</button>
+</form>
+
+<a th:href="@{|/board/${board.id}/delete|}">삭제</a>
+<a th:href="@{/board}">목록으로</a>
+</body>
+</html>
