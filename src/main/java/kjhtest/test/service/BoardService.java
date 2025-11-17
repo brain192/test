@@ -55,4 +55,15 @@ public class BoardService {
     public void update(BoardDTO board) {
         repository.update(board);
     }
+
+    // 페이지별 게시글 가져오기
+    public List<BoardDTO> getPageList(int page, int pageSize) {
+        int offset = (page - 1) * pageSize;
+        return repository.findPage(offset, pageSize);
+    }
+
+    // 전체 게시글 개수 반환
+    public int getTotalCount() {
+        return repository.countAll();
+    }
 }

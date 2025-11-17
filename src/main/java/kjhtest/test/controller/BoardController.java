@@ -15,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.List;
 
 @Controller
 @RequestMapping("/board")
@@ -22,13 +23,27 @@ public class BoardController {
 
     private final BoardService service;
 
+    private static final int PAGE_SIZE = 10;
+
     public BoardController(BoardService service) {
         this.service = service;
     }
 
+    // 게시글 목록 (페이징 포함)
     @GetMapping
-    public String list(Model model) {
-        model.addAttribute("boards", service.getList());
+    public String list(
+            @RequestParam(defaultValue = "1") int page, // 기본 페이지: 1
+            Model model) {
+
+        int totalCount = service.getTotalCount();
+        int totalPages = (int) Math.ceil((double) totalCount / PAGE_SIZE);
+
+        List<BoardDTO> boards = service.getPageList(page, PAGE_SIZE);
+
+        model.addAttribute("boards", boards);
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", totalPages);
+
         return "list";
     }
 
