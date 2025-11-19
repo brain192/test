@@ -1,21 +1,81 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
+  <meta charset="UTF-8">
   <title>게시판 목록</title>
 </head>
 <body>
-<h2>게시글 목록</h2>
+
+<h2>📋 게시판 목록</h2>
+
+<!-- 글쓰기 이동 버튼 -->
 <a th:href="@{/board/write}">글쓰기</a>
-<table border="1">
+<hr>
+
+<!-- ==============================================
+     게시글 목록 출력 테이블
+     ============================================== -->
+<table border="1" cellspacing="0" cellpadding="8">
+  <thead>
   <tr>
-    <th>번호</th><th>제목</th><th>작성자</th><th>작성일</th>
+    <th>번호</th>
+    <th>제목</th>
+    <th>작성자</th>
+    <th>작성일</th>
   </tr>
+  </thead>
+
+  <tbody>
+  <!-- boards : Controller에서 넘어온 List<BoardDTO> -->
   <tr th:each="board : ${boards}">
-    <td th:text="${board.id}"></td>
-    <td><a th:href="@{/board/{id}(id=${board.id})}" th:text="${board.title}"></a></td>
+    <td th:text="${board.id}">1</td>
+    <td>
+      <!-- 상세 페이지 이동 -->
+      <a th:href="@{|/board/detail/${board.id}|}"
+         th:text="${board.title}"></a>
+    </td>
     <td th:text="${board.writer}"></td>
+
+    <!-- LocalDateTime 을 yyyy-MM-dd HH:mm 형식으로 출력 -->
     <td th:text="${#temporals.format(board.createdAt, 'yyyy-MM-dd HH:mm')}"></td>
   </tr>
+  </tbody>
 </table>
+
+<!-- ==============================================
+     페이징 영역 (이전 / 번호 / 다음)
+     ============================================== -->
+<div style="margin-top: 20px;">
+
+  <!-- 이전 페이지 버튼: 현재 페이지가 1보다 클 때만 표시 -->
+  <span th:if="${currentPage > 1}">
+        <a th:href="@{|/board?page=${currentPage - 1}|}">이전</a>
+    </span>
+
+  <!-- 페이지 번호 나열 (1 ~ totalPages) -->
+  <span th:each="pageNum : ${#numbers.sequence(1, totalPages)}">
+
+        <!-- 현재 페이지는 굵게 + 빨간색 표시 -->
+        <a th:href="@{|/board?page=${pageNum}|}"
+           th:text="${pageNum}"
+           th:classappend="${pageNum == currentPage} ? 'current' : ''"
+           style="margin: 0 4px;"></a>
+    </span>
+
+  <!-- 다음 페이지 버튼 -->
+  <span th:if="${currentPage < totalPages}">
+        <a th:href="@{|/board?page=${currentPage + 1}|}">다음</a>
+    </span>
+</div>
+
+<!-- 현재 페이지 표시 스타일 -->
+<style>
+  a.current {
+      font-weight: bold;
+      color: red;
+      text-decoration: underline;
+  }
+</style>
+
 </body>
 </html>

@@ -20,31 +20,45 @@ import java.util.List;
 @Controller
 @RequestMapping("/board")
 public class BoardController {
+    /**
+     * BoardController
+     * ----------------------------------------
+     * - 클라이언트 요청을 처리하는 계층
+     * - URL 매핑 → Service 호출 → 결과를 View(HTML)에 전달
+     * - 페이징 시 page 파라미터 처리
+     */
 
-    private final BoardService service;
-
-    private static final int PAGE_SIZE = 10;
 
     public BoardController(BoardService service) {
         this.service = service;
     }
 
-    // 게시글 목록 (페이징 포함)
-    @GetMapping
-    public String list(
-            @RequestParam(defaultValue = "1") int page, // 기본 페이지: 1
-            Model model) {
+    private final BoardService service;
+    // 한 페이지당 보여줄 글 개수
+    private static final int PAGE_SIZE = 10;
 
+    /**
+     * 게시글 목록 + 페이징 처리
+     * @param page 요청한 페이지 번호 (기본값 1)
+     */
+    @GetMapping
+    public String list(@RequestParam(value = "page", defaultValue = "1") int page, Model model) {
+
+        // 전체 게시글 개수 조회
         int totalCount = service.getTotalCount();
+
+        // 총 페이지 개수 계산
         int totalPages = (int) Math.ceil((double) totalCount / PAGE_SIZE);
 
+        // 현재 페이지의 게시글 목록 조회
         List<BoardDTO> boards = service.getPageList(page, PAGE_SIZE);
 
+        // HTML로 전달할 데이터 등록
         model.addAttribute("boards", boards);
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", totalPages);
 
-        return "list";
+        return "list"; // templates/list.html
     }
 
     @GetMapping("/write")

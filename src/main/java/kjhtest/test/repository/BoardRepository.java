@@ -8,7 +8,14 @@ import java.util.List;
 
 @Repository
 public class BoardRepository {
-
+    /**
+     * BoardRepository
+     * ----------------------------------------
+     * - JDBC 기반으로 DB에 직접 접근하는 계층
+     * - 역할: SQL 실행, 데이터 조회 및 저장 수행
+     * - Service → Repository → DB 구조로 동작
+     */
+    // JdbcTemplate 주입 (DB 접근을 편하게 도와주는 클래스)
     private final JdbcTemplate jdbcTemplate;
 
     public BoardRepository(JdbcTemplate jdbcTemplate) {
