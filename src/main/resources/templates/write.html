@@ -5,7 +5,14 @@
 </head>
 <body>
 <h2>글쓰기</h2>
-<form th:action="@{/board/write}" method="post">
+<form th:action="@{/board/write}" method="post" enctype="multipart/form-data">
+  <!--
+  enctype="multipart/form-data" 파일업로드시 반드시 있어야함
+
+  Current request is not a multipart request 오류는 파일 업로드 요청을
+  Spring이 multipart/form-data 로 인식하지 못할 때 발생하는 대표적인 문제입니다.
+  즉, 업로드 요청이 multipart 가 아니라 일반 폼 요청으로 보내졌다는 뜻입니다.
+  -->
   <input type="text" name="title" placeholder="제목"><br>
   <textarea name="content" placeholder="내용" rows="5" cols="40"></textarea><br>
   <input type="file" name="file"><br>
