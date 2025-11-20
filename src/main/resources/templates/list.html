@@ -31,7 +31,7 @@
     <td th:text="${board.id}">1</td>
     <td>
       <!-- 상세 페이지 이동 -->
-      <a th:href="@{|/board/detail/${board.id}|}"
+      <a th:href="@{|/board/${board.id}|}"
          th:text="${board.title}"></a>
     </td>
     <td th:text="${board.writer}"></td>

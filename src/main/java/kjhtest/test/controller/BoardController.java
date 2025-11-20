@@ -74,12 +74,22 @@ public class BoardController {
 
     @GetMapping("/write")
     public String writeForm(HttpSession session) {
+        /*
+        로그인 체크 후 비로그인 시 /logins로 리다이렉트(※ 보통 /login이 관례).
+        권장: 리다이렉트 주소 일관성, 메시지 전달(예: ?error=needLogin) 고려.
+         */
         if (session.getAttribute("loginMember") == null) {
             return "redirect:/logins";
         }
         return "write";
     }
 
+    /*
+    Current request is not a multipart request
+    → HTML 폼에 enctype="multipart/form-data"가 반드시 있어야 함.
+    @RequestParam("file")의 name과 input의 name 일치 필요.
+    세션에서 member가 null일 때 예외가 발생할 수 있으니 방어 코드 필요:
+     */
     @PostMapping("/write")
     public String write(@ModelAttribute BoardDTO board,
                         @RequestParam("file") MultipartFile file,
