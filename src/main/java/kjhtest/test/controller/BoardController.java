@@ -3,6 +3,7 @@ package kjhtest.test.controller;
 import jakarta.servlet.http.HttpSession;
 import kjhtest.test.domain.BoardDTO;
 import kjhtest.test.domain.MemberDTO;
+import kjhtest.test.service.BoardFileService;
 import kjhtest.test.service.BoardService;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -36,11 +37,16 @@ public class BoardController {
      */
 
 
-    public BoardController(BoardService service) {
+    public BoardController(BoardService service, BoardFileService boardFileService) {
         this.service = service;
+        this.boardFileService = boardFileService;
     }
 
     private final BoardService service;
+    private final BoardFileService boardFileService;
+
+
+
     // 한 페이지당 보여줄 글 개수
     private static final int PAGE_SIZE = 10;
     /*
@@ -90,13 +96,40 @@ public class BoardController {
     @RequestParam("file")의 name과 input의 name 일치 필요.
     세션에서 member가 null일 때 예외가 발생할 수 있으니 방어 코드 필요:
      */
+    /** 글 저장 + 파일 업로드 */
+    /*
     @PostMapping("/write")
     public String write(@ModelAttribute BoardDTO board,
                         @RequestParam("file") MultipartFile file,
                         HttpSession session) throws Exception {
+
+        // 세션에서 로그인 사용자 정보 가져오기
         MemberDTO member = (MemberDTO) session.getAttribute("loginMember");
         board.setWriter(member.getUsername());
+
+        // 1) 게시글 저장
+        int boardId = service.write(board, file);
+
+        // 2) 파일 저장 (DB + 실제 파일 저장)
+        if (!file.isEmpty()) {
+            boardFileService.uploadFile(file, boardId);
+        }
+
+        return "redirect:/board";
+    }
+
+     */
+    @PostMapping("/write")
+    public String write(@ModelAttribute BoardDTO board,
+                        @RequestParam("file") MultipartFile file,
+                        HttpSession session) throws Exception {
+        // 세션에서 로그인 사용자 정보 가져오기
+        MemberDTO member = (MemberDTO) session.getAttribute("loginMember");
+        board.setWriter(member.getUsername());
+
+        // board + file 같이 처리
         service.write(board, file);
+
         return "redirect:/board";
     }
 
