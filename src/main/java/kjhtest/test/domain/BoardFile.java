@@ -4,11 +4,12 @@ import lombok.Data;
 
 @Data
 public class BoardFile {
-    private int id;
-    private int boardId;
+    private Long id;
+    private Long boardId;
     private String originalName;
     private String savedName;
     private String filePath;
+    private Long size;
 }
 
 /*

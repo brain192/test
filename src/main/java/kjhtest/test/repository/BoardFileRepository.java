@@ -3,52 +3,67 @@ package kjhtest.test.repository;
 import kjhtest.test.domain.BoardFile;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
+import java.sql.PreparedStatement;
+import java.sql.Statement;
 import java.util.List;
 
 @Repository
-@RequiredArgsConstructor
 public class BoardFileRepository {
-
     private final JdbcTemplate jdbc;
 
-    // 파일 INSERT
-    public void save(BoardFile file) {
-        String sql = "INSERT INTO board_file (board_id, original_name, saved_name, file_path) VALUES (?,?,?,?)";
-        jdbc.update(sql,
-                file.getBoardId(),
-                file.getOriginalName(),
-                file.getSavedName(),
-                file.getFilePath()
-        );
+    public BoardFileRepository(JdbcTemplate jdbc) {
+        this.jdbc = jdbc;
     }
 
-    // 게시글에 올라온 파일 리스트
-    public List<BoardFile> findByBoardId(int boardId) {
-        String sql = "SELECT * FROM board_file WHERE board_id=?";
-        return jdbc.query(sql, (rs, rowNum) -> {
+    public long save(BoardFile bf) {
+        String sql = "INSERT INTO board_file (board_id, original_name, saved_name, file_path, size) VALUES (?, ?, ?, ?, ?)";
+        KeyHolder kh = new GeneratedKeyHolder();
+        jdbc.update(conn -> {
+            PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            ps.setLong(1, bf.getBoardId());
+            ps.setString(2, bf.getOriginalName());
+            ps.setString(3, bf.getSavedName());
+            ps.setString(4, bf.getFilePath());
+            ps.setLong(5, bf.getSize() == null ? 0L : bf.getSize());
+            return ps;
+        }, kh);
+        Number k = kh.getKey();
+        return (k != null) ? k.longValue() : 0L;
+    }
+
+    public List<BoardFile> findByBoardId(long boardId) {
+        String sql = "SELECT * FROM board_file WHERE board_id = ?";
+        return jdbc.query(sql, (rs, rn) -> {
             BoardFile f = new BoardFile();
-            f.setId(rs.getInt("id"));
-            f.setBoardId(rs.getInt("board_id"));
+            f.setId(rs.getLong("id"));
+            f.setBoardId(rs.getLong("board_id"));
             f.setOriginalName(rs.getString("original_name"));
             f.setSavedName(rs.getString("saved_name"));
             f.setFilePath(rs.getString("file_path"));
+            f.setSize(rs.getLong("size"));
             return f;
         }, boardId);
     }
 
-    // 파일 1개 조회 (다운로드용)
-    public BoardFile findById(int id) {
-        String sql = "SELECT * FROM board_file WHERE id=?";
-        return jdbc.queryForObject(sql, (rs, rowNum) -> {
+    public BoardFile findById(long id) {
+        String sql = "SELECT * FROM board_file WHERE id = ?";
+        return jdbc.queryForObject(sql, (rs, rn) -> {
             BoardFile f = new BoardFile();
-            f.setId(rs.getInt("id"));
-            f.setBoardId(rs.getInt("board_id"));
+            f.setId(rs.getLong("id"));
+            f.setBoardId(rs.getLong("board_id"));
             f.setOriginalName(rs.getString("original_name"));
             f.setSavedName(rs.getString("saved_name"));
             f.setFilePath(rs.getString("file_path"));
+            f.setSize(rs.getLong("size"));
             return f;
         }, id);
+    }
+
+    public void delete(long id) {
+        jdbc.update("DELETE FROM board_file WHERE id = ?", id);
     }
 }

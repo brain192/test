@@ -31,20 +31,22 @@ public class BoardService {
     }
 
     // application.properties 파일에 정의된 업로드 경로를 주입받음
-    @Value("${file.upload-dir}")
+    @Value("${file.upload.dir}")   // ← 여기 수정됨!
     private String uploadDir;
 
     /**
      * 새 게시글 작성 처리 메서드
      * - BoardDTO와 첨부파일(MultipartFile)을 받아 DB 저장 및 파일 저장 처리
      * - 파일이 비어있지 않으면 파일을 지정된 경로(uploadDir)에 저장하고,
-     *   고유 식별명(UUID)으로 파일명을 생성하여 BoardDTO에 설정함
+     * 고유 식별명(UUID)으로 파일명을 생성하여 BoardDTO에 설정함
      * - 파일 저장 후에는 BoardDTO 객체를 BoardRepository를 통해 DB에 저장함
+     *
      * @param board 저장할 게시글 정보 (제목, 내용, 작성자 등 포함)
-     * @param file 업로드된 파일 (첨부파일)
+     * @param file  업로드된 파일 (첨부파일)
+     * @return
      * @throws IOException 파일 저장 중 예외 발생 가능성
      */
-    public void write(BoardDTO board, MultipartFile file) throws IOException {
+    public long write(BoardDTO board, MultipartFile file) throws IOException {
         // 파일이 비어있지 않은 경우에만 파일 저장 로직을 수행
         if (!file.isEmpty()) {
             // 업로드 디렉토리가 존재하지 않으면 새로 생성

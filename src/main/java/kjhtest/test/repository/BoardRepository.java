@@ -46,7 +46,7 @@ public class BoardRepository {
         // 쿼리 실행 및 결과 매핑: 각 행을 BoardDTO 객체로 변환
         return jdbcTemplate.query(sql, (rs, rowNum) -> {
             BoardDTO dto = new BoardDTO();
-            dto.setId(rs.getLong("id"));                           // 게시글 ID 컬럼 값
+            dto.setId(rs.getInt("id"));                           // 게시글 ID 컬럼 값
             dto.setTitle(rs.getString("title"));                   // 게시글 제목 컬럼 값
             dto.setWriter(rs.getString("writer"));                 // 작성자 컬럼 값
             // created_at은 TIMESTAMP 형태이므로 LocalDateTime으로 변환하여 저장
@@ -83,7 +83,7 @@ public class BoardRepository {
         String sql = "SELECT * FROM board2 ORDER BY id DESC";
         return jdbcTemplate.query(sql, (rs, rowNum) -> {
             BoardDTO board = new BoardDTO();
-            board.setId(rs.getLong("id"));                       // ID 컬럼 값
+            board.setId(rs.getInt("id"));                       // ID 컬럼 값
             board.setTitle(rs.getString("title"));               // 제목 컬럼 값
             board.setContent(rs.getString("content"));           // 내용 컬럼 값
             board.setWriter(rs.getString("writer"));             // 작성자 컬럼 값
@@ -104,7 +104,7 @@ public class BoardRepository {
         String sql = "SELECT * FROM board2 WHERE id = ?";
         return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> {
             BoardDTO board = new BoardDTO();
-            board.setId(rs.getLong("id"));                           // ID 컬럼 값
+            board.setId(rs.getInt("id"));                           // ID 컬럼 값
             board.setTitle(rs.getString("title"));                   // 제목 컬럼 값
             board.setContent(rs.getString("content"));               // 내용 컬럼 값
             board.setWriter(rs.getString("writer"));                 // 작성자 컬럼 값
