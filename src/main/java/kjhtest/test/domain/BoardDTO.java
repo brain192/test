@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 
 @Data
 public class BoardDTO {
-    private Long id;
+    private int id;
     private String title;
     private String content;
     private String writer;

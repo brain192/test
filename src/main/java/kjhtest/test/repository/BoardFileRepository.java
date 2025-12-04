@@ -51,4 +51,7 @@ public class BoardFileRepository {
             return f;
         }, id);
     }
+
+    public void delete(BoardFile file) {
+    }
 }

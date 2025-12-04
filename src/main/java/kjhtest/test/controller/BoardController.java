@@ -123,12 +123,22 @@ public class BoardController {
     public String write(@ModelAttribute BoardDTO board,
                         @RequestParam("file") MultipartFile file,
                         HttpSession session) throws Exception {
-        // 세션에서 로그인 사용자 정보 가져오기
+        // 1. 로그인 사용자 가져오기
         MemberDTO member = (MemberDTO) session.getAttribute("loginMember");
+        if (member == null) {
+            return "redirect:/login"; // 로그인 안 되어있으면 로그인 페이지로 이동
+        }
+
+        // 작성자 설정
         board.setWriter(member.getUsername());
 
-        // board + file 같이 처리
-        service.write(board, file);
+        // 2. 게시글 저장 → 생성된 게시글 ID 반환
+        int boardId = service.write(board,file);
+
+        // 3. 파일 업로드 처리 (파일이 있을 경우에만)
+        if (file != null && !file.isEmpty()) {
+            boardFileService.uploadFile(file, boardId);
+        }
 
         return "redirect:/board";
     }
@@ -146,7 +156,7 @@ public class BoardController {
     }
 
     @PostMapping("/{id}/update")
-    public String update(@PathVariable("id") Long id, @ModelAttribute BoardDTO board) {
+    public String update(@PathVariable("id") int id, @ModelAttribute BoardDTO board) {
         board.setId(id);
         service.update(board);
         return "redirect:/board/" + id;
