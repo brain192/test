@@ -2,6 +2,7 @@ package kjhtest.test.controller;
 
 import jakarta.servlet.http.HttpSession;
 import kjhtest.test.domain.BoardDTO;
+import kjhtest.test.domain.BoardFile;
 import kjhtest.test.domain.MemberDTO;
 import kjhtest.test.service.BoardFileService;
 import kjhtest.test.service.BoardService;
@@ -14,165 +15,168 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
- * jakarta.servlet.http.HttpSession : 세션에 로그인 사용자 저장/조회용.
- * MultipartFile : 업로드된 파일을 받는 Spring 타입.
- * FileSystemResource, ResponseEntity : 파일을 스트림으로 내려줄 때 사용.
- * @Controller, @RequestMapping("/board") : 이 클래스의 모든 핸들러 기본 경로가 /board.
+ * 게시판 Controller
+ * - 화면 요청 처리
+ * - Service 계층 호출
+ * - 파일 업로드/다운로드 처리
+ * - 세션 로그인 체크
  */
-@Controller
-@RequestMapping("/board")
+@Controller                 // MVC Controller
+@RequestMapping("/board")   // 기본 URL: /board
 public class BoardController {
-    /**
-     * BoardController
-     * ----------------------------------------
-     * - 클라이언트 요청을 처리하는 계층
-     * - URL 매핑 → Service 호출 → 결과를 View(HTML)에 전달
-     * - 페이징 시 page 파라미터 처리
-     *
-     */
-
-
-    public BoardController(BoardService service, BoardFileService boardFileService) {
-        this.service = service;
-        this.boardFileService = boardFileService;
-    }
 
     private final BoardService service;
-    private final BoardFileService boardFileService;
+    private final BoardFileService fileService;
 
-
-
-    // 한 페이지당 보여줄 글 개수
+    // 한 페이지당 게시글 수
     private static final int PAGE_SIZE = 10;
-    /*
-    의미: BoardService를 생성자 주입으로 받음. 테스트/불변성에 유리.
-    권장: @RequiredArgsConstructor 사용하면 더 간결합니다 (Lombok).
-     */
+
+    // 생성자 주입
+    public BoardController(BoardService service, BoardFileService fileService) {
+        this.service = service;
+        this.fileService = fileService;
+    }
 
     /**
-     * 게시글 목록 + 페이징 처리
-     * @param page 요청한 페이지 번호 (기본값 1)
+     * 게시글 목록
+     * GET /board?page=1
      */
     @GetMapping
     public String list(@RequestParam(value = "page", defaultValue = "1") int page, Model model) {
 
-        // 전체 게시글 개수 조회
+        // 전체 게시글 수
         int totalCount = service.getTotalCount();
 
-        // 총 페이지 개수 계산
+        // 전체 페이지 수 계산
         int totalPages = (int) Math.ceil((double) totalCount / PAGE_SIZE);
 
-        // 현재 페이지의 게시글 목록 조회
+        // 현재 페이지 게시글 목록
         List<BoardDTO> boards = service.getPageList(page, PAGE_SIZE);
 
-        // HTML로 전달할 데이터 등록
+        // View로 데이터 전달
         model.addAttribute("boards", boards);
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", totalPages);
 
-        return "list"; // templates/list.html
+        return "list"; // list.html
     }
 
+    /**
+     * 글쓰기 폼
+     * GET /board/write
+     */
     @GetMapping("/write")
     public String writeForm(HttpSession session) {
-        /*
-        로그인 체크 후 비로그인 시 /logins로 리다이렉트(※ 보통 /login이 관례).
-        권장: 리다이렉트 주소 일관성, 메시지 전달(예: ?error=needLogin) 고려.
-         */
+
+        // 로그인 체크
         if (session.getAttribute("loginMember") == null) {
-            return "redirect:/logins";
+            return "redirect:/login";
         }
+
         return "write";
     }
 
-    /*
-    Current request is not a multipart request
-    → HTML 폼에 enctype="multipart/form-data"가 반드시 있어야 함.
-    @RequestParam("file")의 name과 input의 name 일치 필요.
-    세션에서 member가 null일 때 예외가 발생할 수 있으니 방어 코드 필요:
-     */
-    /** 글 저장 + 파일 업로드 */
-    /*
-    @PostMapping("/write")
-    public String write(@ModelAttribute BoardDTO board,
-                        @RequestParam("file") MultipartFile file,
-                        HttpSession session) throws Exception {
-
-        // 세션에서 로그인 사용자 정보 가져오기
-        MemberDTO member = (MemberDTO) session.getAttribute("loginMember");
-        board.setWriter(member.getUsername());
-
-        // 1) 게시글 저장
-        int boardId = service.write(board, file);
-
-        // 2) 파일 저장 (DB + 실제 파일 저장)
-        if (!file.isEmpty()) {
-            boardFileService.uploadFile(file, boardId);
-        }
-
-        return "redirect:/board";
-    }
-
+    /**
+     * 글 작성 처리
+     * POST /board/write
      */
     @PostMapping("/write")
     public String write(@ModelAttribute BoardDTO board,
-                        @RequestParam("file") MultipartFile file,
+                        @RequestParam(name = "file", required = false) MultipartFile file,
                         HttpSession session) throws Exception {
-        // 1. 로그인 사용자 가져오기
-        MemberDTO member = (MemberDTO) session.getAttribute("loginMember");
-        if (member == null) {
-            return "redirect:/login"; // 로그인 안 되어있으면 로그인 페이지로 이동
-        }
 
-        // 작성자 설정
+        // 로그인 사용자 정보 가져오기
+        MemberDTO member = (MemberDTO) session.getAttribute("loginMember");
         board.setWriter(member.getUsername());
 
-        // 2. 게시글 저장 → 생성된 게시글 ID 반환
-        long boardId = service.write(board,file);
+        // 게시글 저장
+        long boardId = service.write(board);
 
-        // 3. 파일 업로드 처리 (파일이 있을 경우에만)
+        // 파일이 있으면 업로드
         if (file != null && !file.isEmpty()) {
-            boardFileService.uploadFile(file, boardId);
+            fileService.uploadFile(file, boardId);
         }
 
         return "redirect:/board";
     }
 
+    /**
+     * 게시글 상세보기
+     * GET /board/{id}
+     */
     @GetMapping("/{id}")
-    public String detail(@PathVariable("id") Long id, Model model) {
-        model.addAttribute("board", service.getDetail(id));
+    public String detail(@PathVariable("id") long id, Model model) {
+
+        // 게시글 조회
+        BoardDTO board = service.getDetail(id);
+
+        // 첨부파일 목록 조회
+        List<BoardFile> files = fileService.getFilesByBoardId(id);
+
+        model.addAttribute("board", board);
+        model.addAttribute("files", files);
+
         return "detail";
     }
 
+    /**
+     * 파일 다운로드
+     * GET /board/download/{fileId}
+     */
+    @GetMapping("/download/{fileId}")
+    public ResponseEntity<Resource> download(@PathVariable("fileId") long fileId) throws Exception {
+
+        // 파일 정보 조회
+        BoardFile bf = fileService.getFile(fileId);
+
+        // 실제 파일 리소스
+        FileSystemResource resource =
+                new FileSystemResource(bf.getFilePath());
+
+        if (!resource.exists()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        // 한글 파일명 인코딩
+        String encoded =
+                URLEncoder.encode(bf.getOriginalName(), StandardCharsets.UTF_8)
+                        .replace("+", "%20");
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"" + encoded + "\"")
+                .body(resource);
+    }
+
+    /**
+     * 게시글 삭제
+     * GET /board/{id}/delete
+     */
     @GetMapping("/{id}/delete")
-    public String delete(@PathVariable("id") Long id) {
+    public String delete(@PathVariable("id") long id, HttpSession session) {
+
+        // 실무에서는 작성자 권한 체크 필요
         service.delete(id);
+
         return "redirect:/board";
     }
 
+    /**
+     * 게시글 수정
+     * POST /board/{id}/update
+     */
     @PostMapping("/{id}/update")
-    public String update(@PathVariable("id") int id, @ModelAttribute BoardDTO board) {
-        board.setId((long) id);
+    public String update(@PathVariable("id") long id,
+                         @ModelAttribute BoardDTO board) {
+
+        board.setId(id);
         service.update(board);
+
         return "redirect:/board/" + id;
-    }
-
-    // 다운로드 기능
-    @GetMapping("/download/{id}")
-    public ResponseEntity<Resource> download(@PathVariable Long id) throws UnsupportedEncodingException {
-        BoardDTO board = service.getDetail(id);
-        String uploadDir = "uploads"; // service @Value 값과 동일해야 함
-        FileSystemResource resource = new FileSystemResource(uploadDir + "/" + board.getFilename());
-
-        String encodedName = URLEncoder.encode(board.getOriginalFilename(), "UTF-8").replace("+", "%20");
-
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + encodedName + "\"")
-                .body(resource);
     }
 }

@@ -10,7 +10,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -41,7 +40,7 @@ public class BoardFileService {
         bf.setOriginalName(originalName);
         bf.setSavedName(savedName);
         bf.setFilePath(dest.getAbsolutePath());
-        bf.setSize(file.getSize());
+        bf.setFileSize(file.getSize());
 
         return fileRepository.save(bf);
     }

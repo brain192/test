@@ -1,7 +1,6 @@
 package kjhtest.test.repository;
 
 import kjhtest.test.domain.BoardFile;
-import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -20,7 +19,7 @@ public class BoardFileRepository {
     }
 
     public long save(BoardFile bf) {
-        String sql = "INSERT INTO board_file (board_id, original_name, saved_name, file_path, size) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO board_file (board_id, original_name, saved_name, file_path, file_size) VALUES (?, ?, ?, ?, ?)";
         KeyHolder kh = new GeneratedKeyHolder();
         jdbc.update(conn -> {
             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
@@ -28,7 +27,8 @@ public class BoardFileRepository {
             ps.setString(2, bf.getOriginalName());
             ps.setString(3, bf.getSavedName());
             ps.setString(4, bf.getFilePath());
-            ps.setLong(5, bf.getSize() == null ? 0L : bf.getSize());
+            //ps.setLong(5, bf.getFileSize() == null ? 0L : bf.getFileSize());
+            ps.setLong(5, bf.getFileSize());
             return ps;
         }, kh);
         Number k = kh.getKey();
@@ -44,7 +44,7 @@ public class BoardFileRepository {
             f.setOriginalName(rs.getString("original_name"));
             f.setSavedName(rs.getString("saved_name"));
             f.setFilePath(rs.getString("file_path"));
-            f.setSize(rs.getLong("size"));
+            f.setFileSize(rs.getLong("file_size"));
             return f;
         }, boardId);
     }
@@ -58,7 +58,7 @@ public class BoardFileRepository {
             f.setOriginalName(rs.getString("original_name"));
             f.setSavedName(rs.getString("saved_name"));
             f.setFilePath(rs.getString("file_path"));
-            f.setSize(rs.getLong("size"));
+            f.setFileSize(rs.getLong("file_size"));
             return f;
         }, id);
     }

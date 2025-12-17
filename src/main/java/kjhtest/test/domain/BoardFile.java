@@ -9,7 +9,7 @@ public class BoardFile {
     private String originalName;
     private String savedName;
     private String filePath;
-    private Long size;
+    private long fileSize;
 }
 
 /*
